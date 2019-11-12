@@ -18,5 +18,10 @@
         "index": 4,
         "given": {},
         "tofind": {"Alarm" :  "False"}
+    },
+    {
+        "index": 5,
+        "given": {},
+        "tofind": {"MaryCalls": "True"}
     }
 ]

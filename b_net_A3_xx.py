@@ -125,7 +125,7 @@ class BayesianNetwork(object):
                 # print
                 # print "iteration i: ", i
                 probToAdd = 0
-                p = target_node.probabilities[i]
+                p = deepcopy(target_node.probabilities[i])
                 possible = p["probability"]
                 del p["probability"]
                 # print "What is this p ", p
