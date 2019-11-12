@@ -23,5 +23,11 @@
         "index": 5,
         "given": {},
         "tofind": {"MaryCalls": "True"}
+    },
+    {
+        "index": 6,
+        "given": {},
+        "tofind": {"JohnCalls": "False"}
     }
+
 ]

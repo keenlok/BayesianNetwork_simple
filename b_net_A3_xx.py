@@ -16,7 +16,8 @@ class BayesianNetwork(object):
         self.answer = []
         self.nodes = None
 
-    # Construct a DAG with Nodes
+    ''' Construct the Bayesian network with custom Node class
+    '''
     def construct(self):
         print "Building Bayesian Network"
         nodes = {}
@@ -91,9 +92,16 @@ class BayesianNetwork(object):
         # the format of the answer returned SHOULD be as shown above.
         return self.answer
 
+    '''Find the probability of something given its parents.
+    e.g If A is dependent on B and C, and the values/evidence for B and C are in given
+    This function simply looks for that values in the node's probabilities
+    
+    find:dict, given:dict, target:node, to_find:string - name of the node
+    '''
     @staticmethod
     def get_definite_conditional_probability(find, given, target, to_find):
-        print "Finding definite probability"
+        # print "Finding definite probability"
+        # print "What is given???", given, "And what is FIND???", find
         prob_key = given
         prob_key["own_value"] = find[to_find]
         print prob_key
@@ -105,58 +113,53 @@ class BayesianNetwork(object):
             if prob_key.items() == to_check_with.items():
                 probability = possible
                 break
-        print probability
+        # print probability
         return probability
 
-    # Calculate / Find the probability of a single variable ie P(A = a)
+    ''' Calculate / Find the probability of a single variable ie P(A = a)
+    target_node:node, value: "True" | "False"
+    '''
     def calculate_probability_single(self, target_node, value):
-        # print "What is this target", target_node.name
-        # print "What is the value", value
-
         # not dependent on other nodes
         if not target_node.isConditional:
             return target_node.probabilities[value]
+        # Has parents
         else:
+            if target_node.isCalculated:
+                return target_node.get_single_probability(value)
+            # Create a list of possible combinations from the node's parents
             combs = BayesianNetwork.enumerate_vars(target_node.dependencies)
-            # print len(combs)
             prob = 0
-            # print target_node.probabilities[0]
+            # Calculate the probability for P(A | Parents(A)) * P (Parents(A))
             for i in range(0, len(target_node.probabilities)):
-                # print
-                # print "iteration i: ", i
-                probToAdd = 0
+                probability_to_add = 0
                 p = deepcopy(target_node.probabilities[i])
                 possible = p["probability"]
                 del p["probability"]
-                # print "What is this p ", p
-                # print possible
                 for j in range(0, len(combs)):
-                    # print "iteration j", j
                     combs[j]["own_value"] = value
-                    # print combs[j]
                     if p.items() == combs[j].items():
-                        # print "These 2 are equal", p, combs[j]
                         for dependency in target_node.dependencies:
                             possible *= self.calculate_probability_single(self.nodes[dependency], p[dependency])
-                        probToAdd = possible
-                        # print probToAdd
+                        probability_to_add = possible
                         break
-                # print probToAdd
-                prob += probToAdd
+                prob += probability_to_add
 
-            print "What is the final probability", prob
+            target_node.store_single_probability(value, prob)
+            # print "What is the final probability", prob
             return prob
 
-
-
-    @staticmethod
-    def calculate_find_given(find, find_value, given, given_value):
-        print find.probabilities["find"]
-
-    ''' Enumerates a list of true and false variables'''
+    ''' Enumerates a list of true and false variables:
+        So for a list of variables say ["Burglary", "Earthquake"],
+        it will return: [
+        {'Burglary': 'True',    'Earthquake': 'True'}, 
+        {'Burglary': 'False',   'Earthquake': 'True'}, 
+        {'Burglary': 'False',   'Earthquake': 'False'}, 
+        {'Burglary': 'True',    'Earthquake': 'False'}
+        ] '''
     @staticmethod
     def enumerate_vars(list_of_vars):
-        print list_of_vars
+        # print list_of_vars
         length = pow(2, len(list_of_vars) - 1)
         combs = list()
         perms = set()
@@ -183,6 +186,24 @@ class Node(object):
         self.dependencies = dependencies
         self.probabilities = probabilities
         self.isConditional = is_conditional
+        if is_conditional:
+            self.isCalculated = False
+            self.singleProbability = {}
+
+    def get_single_probability(self, value):
+        if self.isCalculated:
+            return self.singleProbability[value]
+        else:
+            return 0
+
+    def store_single_probability(self, value, probability):
+        if value == "True":
+            self.singleProbability[value] = probability
+            self.singleProbability["False"] = 1 - probability
+        else:
+            self.singleProbability[value] = probability
+            self.singleProbability["True"] = 1 - probability
+        self.isCalculated = True
 
     # You may add more classes/functions if you think is useful. However, ensure
     # all the classes/functions are in this file ONLY and used within the
